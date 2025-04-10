@@ -1,9 +1,11 @@
-import tien from "./founder/tien.jpg";
+import tien from "./founder/anh-tien.jpg";
 import hieu from "./founder/hieu.jpg";
 import khanh from "./founder/khanh.jpg";
-import son from "./founder/son.jpg";
-import dung from "./founder/dung.jpg";
-import thanh from "./founder/thanh.jpg";
+import quang from "./founder/quang.jpg";
+//import khanh from "./founder/tien.jpg";
+//import son from "./founder/son.jpg";
+//import dung from "./founder/dung.jpg";
+//import thanh from "./founder/thanh.jpg";
 import nami from "./wallet/nami.svg";
 import flint from "./wallet/flint.svg";
 import eternl from "./wallet/eternl.webp";
@@ -37,12 +39,14 @@ import warehouse from "./common/warehouse.png";
 import certification from "./common/certification.png";
 
 export const founderImage = {
-  son: son,
-  tien: tien,
+  //son: son,
+  //tien: tien,
   hieu: hieu,
   khanh: khanh,
-  dung: dung,
-  thanh: thanh,
+  quang: quang,
+  tien: tien,
+  //dung: dung,
+  //thanh: thanh,
 } as const;
 
 export const appImage = {
