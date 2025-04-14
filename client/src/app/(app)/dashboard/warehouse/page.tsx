@@ -14,6 +14,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import Loading from "@/components/loading";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Warehouse } from "@prisma/client";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Pencil, Trash2 } from "lucide-react";
 
 const FormSchema = z.object({
   name: z.string().min(2, {
@@ -28,7 +31,8 @@ const FormSchema = z.object({
 export default function WarehousePage() {
   const [deleteWarehouseId, setDeleteWarehouseId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingWarehouse, setEditingWarehouse] = useState<any>(null);
+
+  const [editingWarehouse, setEditingWarehouse] = useState<Warehouse>(null!);
 
   const queryClient = useQueryClient();
 
@@ -51,7 +55,8 @@ export default function WarehousePage() {
       });
       queryClient.invalidateQueries({ queryKey: ["getAllWarehouses"] });
     },
-    onError: (error: any) => {
+
+    onError: (error) => {
       toast({
         title: "Error",
         description: error?.message || "Failed to delete warehouse.",
@@ -69,9 +74,10 @@ export default function WarehousePage() {
         variant: "default",
       });
       queryClient.invalidateQueries({ queryKey: ["getAllWarehouses"] });
-      setEditingWarehouse(null);
+      setEditingWarehouse(null!);
     },
-    onError: (error: any) => {
+
+    onError: (error) => {
       toast({
         title: "Error",
         description: error?.message || "Failed to update warehouse.",
@@ -107,7 +113,7 @@ export default function WarehousePage() {
     setDeleteWarehouseId(null);
   };
 
-  const handleEdit = (warehouse: any) => {
+  const handleEdit = (warehouse: Warehouse) => {
     setEditingWarehouse(warehouse);
     form.setValue("name", warehouse.name);
     form.setValue("location", warehouse.location || "");
@@ -175,7 +181,7 @@ export default function WarehousePage() {
                         <FormControl>
                           <Input placeholder="Enter warehouse name" {...field} className="w-full" />
                         </FormControl>
-                        <FormDescription>Provide the name of the warehouse.</FormDescription>
+                        <FormDescription>{"Provide the name of the warehouse. Example: Da Lat Cold Storage"}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -189,7 +195,9 @@ export default function WarehousePage() {
                         <FormControl>
                           <Input placeholder="Enter location (optional)" {...field} className="w-full" />
                         </FormControl>
-                        <FormDescription>Provide the location of the warehouse (optional).</FormDescription>
+                        <FormDescription>
+                          {"Provide the location of the warehouse (optional). Example: Phu Hoi Industrial Park, Lam Dong"}
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -209,14 +217,14 @@ export default function WarehousePage() {
                             onChange={(e) => field.onChange(Number(e.target.value))}
                           />
                         </FormControl>
-                        <FormDescription>Provide the capacity of the warehouse.</FormDescription>
+                        <FormDescription>{"Provide the capacity of the warehouse. Example: 1000Q"}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   <div className="flex items-center justify-end gap-6 space-x-2 pt-6">
                     {editingWarehouse ? (
-                      <Button className="w-full self-stretch bg-green-600" type="submit">
+                      <Button className="w-full self-stretch" type="submit">
                         Save
                       </Button>
                     ) : (
@@ -280,14 +288,33 @@ export default function WarehousePage() {
                           <TableCell className="border px-4 py-2">{warehouse.location || "N/A"}</TableCell>
                           <TableCell className="border px-4 py-2">{warehouse.capacity}</TableCell>
                           <TableCell className="border px-4 py-2 text-center">
-                            <div className="flex justify-center gap-2">
-                              <Button variant="outline" size="sm" onClick={() => handleEdit(warehouse)}>
-                                Edit
-                              </Button>
-                              <Button variant="destructive" size="sm" onClick={() => handleDelete(warehouse.id)}>
-                                Delete
-                              </Button>
-                            </div>
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  Actions
+                                </Button>
+                              </HoverCardTrigger>
+                              <HoverCardContent className="w-40 p-2 flex flex-col gap-2 shadow-lg border rounded-md">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex items-center gap-1 text-blue-600 border-blue-600 hover:bg-blue-50"
+                                  onClick={() => handleEdit(warehouse)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  <span>Edit</span>
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  className="flex items-center gap-1 text-red-600 border-red-600 hover:bg-red-50"
+                                  onClick={() => handleDelete(warehouse.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  <span>Delete</span>
+                                </Button>
+                              </HoverCardContent>
+                            </HoverCard>
                           </TableCell>
                         </TableRow>
                       ))}

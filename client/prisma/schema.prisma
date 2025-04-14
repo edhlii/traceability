@@ -10,7 +10,7 @@ datasource db {
 
 model User {
   id           String         @id @default(cuid())
-  address      String         @unique @map("address") // Địa chỉ ví Cardano
+  address      String         @unique @map("address") 
   createdAt    DateTime       @default(now()) @map("created_at")
   updatedAt    DateTime       @updatedAt @map("updated_at")
   Collection   Collection[]
@@ -28,7 +28,7 @@ model WalletNonce {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  address   String   @unique @map("address") // Địa chỉ ví Cardano
+  address   String   @unique @map("address") 
   nonce     String
 
   @@map("wallet_nonce")
@@ -156,7 +156,7 @@ model Subscription {
   servicePlanId String    @map("service_plan_id")
   startDate     DateTime  @map("start_date")
   endDate       DateTime  @map("end_date")
-  status        String    @default("active") // "active", "expired", "cancelled"
+  status        String    @default("active")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
   user          User      @relation(fields: [userId], references: [id])
@@ -166,14 +166,13 @@ model Subscription {
   @@map("subscription")
 }
 
-// 12. Payment - Thanh toán qua ví (ADA)
 model Payment {
   id             String       @id @default(cuid())
   userId         String       @map("user_id")
   subscriptionId String       @map("subscription_id")
-  amount         Float // Số ADA thanh toán
-  currency       String       @default("ADA") // Loại tiền
-  txHash         String       @unique @map("tx_hash") // Hash giao dịch Cardano
+  amount         Float 
+  currency       String       @default("ADA") 
+  txHash         String       @unique @map("tx_hash") 
   paymentDate    DateTime     @map("payment_date")
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
@@ -238,7 +237,6 @@ model Certification {
   @@map("certification")
 }
 
-// 17. Feedback - Phản hồi từ người dùng
 model Feedback {
   id        String   @id @default(cuid())
   userId    String   @map("user_id")

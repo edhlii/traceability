@@ -15,6 +15,9 @@ import Loading from "@/components/loading";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useParams } from "next/navigation";
+import { Material } from "@prisma/client";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Pencil, Trash2 } from "lucide-react";
 
 const FormSchema = z.object({
   name: z.string().min(2, {
@@ -27,14 +30,11 @@ const FormSchema = z.object({
 });
 
 export default function MaterialPage() {
-  const params = useParams();
-  const supplierId = params.id as string;
-  if (!supplierId) return null;
+  const queryClient = useQueryClient();
+
   const [deleteMaterialId, setDeleteMaterialId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingMaterial, setEditingMaterial] = useState<any>(null);
-
-  const queryClient = useQueryClient();
+  const [editingMaterial, setEditingMaterial] = useState<Material>(null!);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -43,6 +43,17 @@ export default function MaterialPage() {
       quantity: 0,
       harvestDate: "",
     },
+  });
+  const params = useParams();
+  const supplierId = params.id as string;
+
+  const {
+    data: materialsData,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["getAllMaterials", supplierId],
+    queryFn: () => getAllMaterials({ supplierId }),
   });
 
   const deleteMutation = useMutation({
@@ -55,7 +66,7 @@ export default function MaterialPage() {
       });
       queryClient.invalidateQueries({ queryKey: ["getAllMaterials", supplierId] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: "Error",
         description: error?.message || "Failed to delete material.",
@@ -73,9 +84,9 @@ export default function MaterialPage() {
         variant: "default",
       });
       queryClient.invalidateQueries({ queryKey: ["getAllMaterials", supplierId] });
-      setEditingMaterial(null);
+      setEditingMaterial(null!);
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: "Error",
         description: error?.message || "Failed to update material.",
@@ -84,14 +95,7 @@ export default function MaterialPage() {
     },
   });
 
-  const {
-    data: materialsData,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["getAllMaterials", supplierId],
-    queryFn: () => getAllMaterials({ supplierId }),
-  });
+  if (!supplierId) return null;
 
   const handleDelete = (materialId: string) => {
     setDeleteMaterialId(materialId);
@@ -111,7 +115,7 @@ export default function MaterialPage() {
     setDeleteMaterialId(null);
   };
 
-  const handleEdit = (material: any) => {
+  const handleEdit = (material: Material) => {
     setEditingMaterial(material);
     form.setValue("name", material.name);
     form.setValue("quantity", material.quantity);
@@ -126,6 +130,8 @@ export default function MaterialPage() {
         quantity: data.quantity,
         harvestDate: data.harvestDate ? new Date(data.harvestDate) : undefined,
       });
+      form.reset();
+      setEditingMaterial(null!);
     }
   };
 
@@ -156,7 +162,7 @@ export default function MaterialPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "An unexpected error occurred.",
+        description: "An unexpected error occurred." + (error as Error).message,
         variant: "destructive",
       });
     }
@@ -179,7 +185,7 @@ export default function MaterialPage() {
                         <FormControl>
                           <Input placeholder="Enter material name" {...field} className="w-full" />
                         </FormControl>
-                        <FormDescription>Provide the name of the material.</FormDescription>
+                        <FormDescription>Provide the name of the material. Example: Fresh A2 Cow Milk</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -199,7 +205,7 @@ export default function MaterialPage() {
                             onChange={(e) => field.onChange(Number(e.target.value))}
                           />
                         </FormControl>
-                        <FormDescription>Provide the quantity of the material.</FormDescription>
+                        <FormDescription>Provide the quantity of the material. Example: 500.0</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -211,9 +217,9 @@ export default function MaterialPage() {
                       <FormItem>
                         <FormLabel>Harvest Date</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} className="w-full" />
+                          <Input type="datetime-local" {...field} className="w-full text-white" />
                         </FormControl>
-                        <FormDescription>Provide the harvest date of the material (optional).</FormDescription>
+                        <FormDescription>Provide the harvest date of the material (optional). Example: 2025-03-28T00:00:00Z</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -284,14 +290,33 @@ export default function MaterialPage() {
                             {material.harvestDate ? new Date(material.harvestDate).toLocaleDateString() : "N/A"}
                           </TableCell>
                           <TableCell className="border px-4 py-2 text-center">
-                            <div className="flex justify-center gap-2">
-                              <Button variant="outline" size="sm" onClick={() => handleEdit(material)}>
-                                Edit
-                              </Button>
-                              <Button variant="destructive" size="sm" onClick={() => handleDelete(material.id)}>
-                                Delete
-                              </Button>
-                            </div>
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  Actions
+                                </Button>
+                              </HoverCardTrigger>
+                              <HoverCardContent className="w-40 p-2 flex flex-col gap-2 shadow-lg border rounded-md">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex items-center gap-1 text-blue-600 border-blue-600 hover:bg-blue-50"
+                                  onClick={() => handleEdit(material)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  <span>Edit</span>
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  className="flex items-center gap-1 text-red-600 border-red-600 hover:bg-red-50"
+                                  onClick={() => handleDelete(material.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  <span>Delete</span>
+                                </Button>
+                              </HoverCardContent>
+                            </HoverCard>
                           </TableCell>
                         </TableRow>
                       ))}

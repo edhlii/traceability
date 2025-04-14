@@ -37,7 +37,8 @@ import process from "./common/process.png";
 import document from "./common/document.png";
 import warehouse from "./common/warehouse.png";
 import certification from "./common/certification.png";
-
+import ggplay from "./common/ggplay.png";
+import appstore from "./common/appstore.png";
 export const founderImage = {
   //son: son,
   //tien: tien,
@@ -63,7 +64,8 @@ export const appImage = {
   fastCollection: fastCollection,
   api: api,
   about: about,
-
+  ggplay: ggplay,
+  appstore: appstore,
   feedback: feedback,
   process: process,
   certification: certification,

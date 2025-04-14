@@ -8,6 +8,9 @@ export const routes = {
   home: {
     redirect: "/dashboard",
   },
+  product: {
+    redirect: "/products",
+  },
   mint: {
     redirect: "/dashboard/mint",
     children: {
@@ -50,5 +53,9 @@ export const routes = {
 
   warehouse: {
     redirect: "/dashboard/warehouse",
+  },
+
+  download: {
+    redirect: "/download",
   },
 };

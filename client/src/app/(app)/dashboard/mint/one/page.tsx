@@ -21,17 +21,18 @@ export default function Page() {
     startMinting,
     setCollectionToSave,
   } = useMintOneContext();
+  console.log("metadataTemplate", metadataTemplate);
 
   useEffect(() => {
-    if (!isNil(metadataTemplate)) {
+    if (!isNil(metadataTemplate) && metadataTemplate !== metadataToMint) {
       setMetadataToMint(metadataTemplate);
     }
-  }, [metadataTemplate, setMetadataToMint]);
+  }, [metadataTemplate, metadataToMint, setMetadataToMint]);
 
   return (
     <div className="pt-8 pb-20 px-10 m-auto flex flex-col">
       <div className="rounded-xl p-6 bg-section shadow-md flex flex-col gap-3">
-        <h1 className="text-2xl font-medium leading-7 text-center">Mint Steps</h1>
+        <h1 className="text-2xl font-medium leading-7 text-center">Mint Product Steps</h1>
 
         <StepperNav stepper={mintOneStepper} steps={mintOneSteps} />
         <div className="space-y-4">

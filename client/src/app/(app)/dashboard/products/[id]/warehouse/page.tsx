@@ -21,6 +21,9 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useParams } from "next/navigation";
 import { getAllWarehouses } from "@/services/database/warehouse";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Pencil, Trash2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 const FormSchema = z.object({
   warehouseId: z.string().min(1, { message: "Warehouse ID is required." }),
@@ -32,12 +35,21 @@ const FormSchema = z.object({
   conditions: z.string().optional(),
 });
 
+interface Storage {
+  id: string;
+  warehouseId: string; // Adjust based on actual type
+  entryTime: string | Date;
+  exitTime?: string | Date | null; // Optional, can be null/undefined
+  conditions?: string | null; // Optional, can be null/undefined
+}
+
 export default function WarehouseStoragePage() {
   const params = useParams();
   const productId = params.id as string;
 
   const [deleteStorageId, setDeleteStorageId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editingStorage, setEditingStorage] = useState<any>(null);
 
   const queryClient = useQueryClient();
@@ -58,8 +70,10 @@ export default function WarehouseStoragePage() {
     isError,
   } = useQuery({
     queryKey: ["getAllWarehouseStorage", productId],
-    queryFn: () => getAllWarehouseStorage({ warehouseId: productId }),
+    queryFn: () => getAllWarehouseStorage({ productId: productId }),
   });
+
+  console.log(storageData);
 
   const deleteMutation = useMutation({
     mutationFn: deleteWarehouseStorage,
@@ -67,7 +81,7 @@ export default function WarehouseStoragePage() {
       toast({ title: "Success", description: "Record deleted successfully!", variant: "default" });
       queryClient.invalidateQueries({ queryKey: ["getAllWarehouseStorage", productId] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({ title: "Error", description: error?.message || "Failed to delete record.", variant: "destructive" });
     },
   });
@@ -79,7 +93,7 @@ export default function WarehouseStoragePage() {
       queryClient.invalidateQueries({ queryKey: ["getAllWarehouseStorage", productId] });
       setEditingStorage(null);
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({ title: "Error", description: error?.message || "Failed to update record.", variant: "destructive" });
     },
   });
@@ -89,7 +103,7 @@ export default function WarehouseStoragePage() {
     setIsDialogOpen(true);
   };
 
-  const { data: warehousesData, isLoading: isWarehousesLoading } = useQuery({
+  const { data: warehousesData } = useQuery({
     queryKey: ["getAllWarehouses"],
     queryFn: getAllWarehouses,
   });
@@ -107,7 +121,7 @@ export default function WarehouseStoragePage() {
     setDeleteStorageId(null);
   };
 
-  const handleEdit = (storage: any) => {
+  const handleEdit = (storage: Storage) => {
     setEditingStorage(storage);
     form.setValue("warehouseId", storage.warehouseId);
     form.setValue("entryTime", new Date(storage.entryTime).toISOString().split("T")[0]);
@@ -144,7 +158,7 @@ export default function WarehouseStoragePage() {
         toast({ title: "Error", description: message, variant: "destructive" });
       }
     } catch (error) {
-      toast({ title: "Error", description: "An unexpected error occurred.", variant: "destructive" });
+      toast({ title: "Error", description: error + "An unexpected error occurred." + error, variant: "destructive" });
     }
   };
 
@@ -164,18 +178,30 @@ export default function WarehouseStoragePage() {
                       <FormItem>
                         <FormLabel>Warehouse</FormLabel>
                         <FormControl>
-                          <select  {...field} className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 w-full" defaultValue="">
-                            <option className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 w-full" value="" disabled>
+                          <select
+                            {...field}
+                            className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 w-full"
+                            defaultValue=""
+                          >
+                            <option
+                              className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 w-full"
+                              value=""
+                              disabled
+                            >
                               Select a warehouse
                             </option>
-                            {warehousesData?.data?.map((warehouse: any) => (
-                              <option className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 w-full" key={warehouse.id} value={warehouse.id}>
+                            {warehousesData?.data?.map((warehouse) => (
+                              <option
+                                className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 w-full"
+                                key={warehouse.id}
+                                value={warehouse.id}
+                              >
                                 {warehouse.name}
                               </option>
                             ))}
                           </select>
                         </FormControl>
-                        <FormDescription>Select the warehouse for this record.</FormDescription>
+                        <FormDescription>{"Select the warehouse for this record. Example: Phu Hoi Industrial Park, Lam Dong"}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -189,7 +215,7 @@ export default function WarehouseStoragePage() {
                         <FormControl>
                           <Input type="date" {...field} className="w-full" />
                         </FormControl>
-                        <FormDescription>Provide the entry time of the product.</FormDescription>
+                        <FormDescription>{"Provide the entry time of the product. Example: 2025-04-10T10:18:00Z"}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -203,7 +229,7 @@ export default function WarehouseStoragePage() {
                         <FormControl>
                           <Input type="date" {...field} className="w-full" />
                         </FormControl>
-                        <FormDescription>Provide the exit time of the product (optional).</FormDescription>
+                        <FormDescription>{"Provide the exit time of the product (optional). Example: 2025-04-10T10:18:00Z"}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -215,16 +241,16 @@ export default function WarehouseStoragePage() {
                       <FormItem>
                         <FormLabel>Conditions</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter storage conditions (optional)" {...field} className="w-full" />
+                          <Textarea placeholder="Enter storage conditions (optional)" {...field} className="w-full" />
                         </FormControl>
-                        <FormDescription>Provide the storage conditions (optional).</FormDescription>
+                        <FormDescription>{"Provide the storage conditions (optional). Example: Temperature 4°C, Humidity 60%"}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   <div className="flex items-center justify-end gap-6 space-x-2 pt-6">
                     {editingStorage ? (
-                      <Button className="w-full self-stretch bg-green-600" type="submit">
+                      <Button className="w-full self-stretch" type="submit">
                         Save
                       </Button>
                     ) : (
@@ -275,7 +301,7 @@ export default function WarehouseStoragePage() {
                   <Table className="table-auto w-full border-collapse border mt-4">
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="border px-4 py-2 text-left">Warehouse ID</TableHead>
+                        <TableHead className="border px-4 py-2 text-left">Warehouse Name</TableHead>
                         <TableHead className="border px-4 py-2 text-left">Entry Time</TableHead>
                         <TableHead className="border px-4 py-2 text-left">Exit Time</TableHead>
                         <TableHead className="border px-4 py-2 text-left">Conditions</TableHead>
@@ -285,21 +311,40 @@ export default function WarehouseStoragePage() {
                     <TableBody>
                       {storageData?.data?.map((storage) => (
                         <TableRow key={storage.id}>
-                          <TableCell className="border px-4 py-2">{storage.warehouseId}</TableCell>
+                          <TableCell className="border px-4 py-2">{storage.warehouse.name}</TableCell>
                           <TableCell className="border px-4 py-2">{new Date(storage.entryTime).toLocaleDateString()}</TableCell>
                           <TableCell className="border px-4 py-2">
                             {storage.exitTime ? new Date(storage.exitTime).toLocaleDateString() : "N/A"}
                           </TableCell>
                           <TableCell className="border px-4 py-2">{storage.conditions || "N/A"}</TableCell>
                           <TableCell className="border px-4 py-2 text-center">
-                            <div className="flex justify-center gap-2">
-                              <Button variant="outline" size="sm" onClick={() => handleEdit(storage)}>
-                                Edit
-                              </Button>
-                              <Button variant="destructive" size="sm" onClick={() => handleDelete(storage.id)}>
-                                Delete
-                              </Button>
-                            </div>
+                            <HoverCard>
+                              <HoverCardTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  Actions
+                                </Button>
+                              </HoverCardTrigger>
+                              <HoverCardContent className="w-40 p-2 flex flex-col gap-2 shadow-lg border rounded-md">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex items-center gap-1 text-blue-600 border-blue-600 hover:bg-blue-50"
+                                  onClick={() => handleEdit(storage)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  <span>Edit</span>
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  className="flex items-center gap-1 text-red-600 border-red-600 hover:bg-red-50"
+                                  onClick={() => handleDelete(storage.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  <span>Delete</span>
+                                </Button>
+                              </HoverCardContent>
+                            </HoverCard>
                           </TableCell>
                         </TableRow>
                       ))}
